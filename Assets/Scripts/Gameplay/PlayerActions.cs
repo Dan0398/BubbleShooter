@@ -1,7 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Gameplay{
     [System.Serializable]
@@ -12,15 +11,19 @@ namespace Gameplay{
         [SerializeField] BoxCollider2D LeftBarrier, RightBarrier;
         [SerializeField] Vector2 RootPoint;
         [SerializeField, Range (1, 10)] int TrajectoryCornersSmooth;
+        bool GameplayActive, DirectionValid;
         float BubbleSize;
-        Vector2 RayOrigin, RayDir;
-        Vector2 MousePos, OldMousePos;
+        Vector2 RayOrigin, RayDir, MousePos;
         Bubble ActualBubble;
         int BubbleSuccessCollisions;
         Vector3[] BubbleWaypoints, TrajectoryPoints;
         RaycastHit2D CollisionData;
         BubblesQueue Queue;
         GameField GameField;
+        [SerializeField] EventSystem Events;
+        [SerializeField] UnityEngine.UI.GraphicRaycaster[] UserCanvases;
+        List<RaycastResult> CanvasResults;
+        PointerEventData m_PointerEventData;
         
         public void Init(float BubbleSize, BubblesQueue Queue, GameField Field)
         {
@@ -33,8 +36,19 @@ namespace Gameplay{
             GameField = Field;
         }
         
+        public void StopGameplay(Pool HidingPool)
+        {
+            GameplayActive = false;
+            TrajectoryLine.gameObject.SetActive(false);
+            if (ActualBubble == null) return;
+            HidingPool.HideBubbleToPool(ActualBubble);
+            ActualBubble = null;
+        }
+        
         public void StartGameplay()
         {
+            GameplayActive = true;
+            TrajectoryLine.gameObject.SetActive(true);
             RefreshActualBubble();
         }
         
@@ -48,24 +62,23 @@ namespace Gameplay{
         
         public void ApplyPointerPos(Vector2 NewPos)
         {
-            if (OldMousePos == NewPos) return;
-            OldMousePos = NewPos;
+            if (MousePos == NewPos) return;
+            MousePos = NewPos;
             ProcessRay();
         }
         
         void ProcessRay()
         {
-            RayOrigin = RootPoint;
-            RayDir = (Vector2)Cam.ScreenToWorldPoint(OldMousePos) - RootPoint;
-            RayDir = RayDir.normalized;
-            BubbleWaypoints[0] = RayOrigin;
-            TrajectoryPoints[0] = RayOrigin;
+            if (!GameplayActive) return;
+            SetupStarts();
+            CheckValid();
+            if (!DirectionValid) return;
             int TrajectoryPointsCount = 1;
-            Vector2 ForwardRound, UpRound, RoundCenter, HitPos;
             float CircleRound = BubbleSize*0.5f;
+            Vector2 ForwardRound, UpRound, RoundCenter, HitPos;
             for (BubbleSuccessCollisions = 1; BubbleSuccessCollisions<20; BubbleSuccessCollisions++)
             {
-                CollisionData = Physics2D.Raycast(RayOrigin, RayDir, 9000);
+                CollisionData = Physics2D.Raycast(RayOrigin, RayDir, 20);
                 if (CollisionData.collider == null) 
                 {
                     HitPos = RayOrigin + RayDir * 10;
@@ -117,12 +130,31 @@ namespace Gameplay{
             }
             TrajectoryLine.positionCount = TrajectoryPointsCount;
             TrajectoryLine.SetPositions(TrajectoryPoints);
+            
+            
+            void CheckValid()
+            {
+                var StartAngle = Vector2.Angle(Vector2.up, RayDir) * 2;
+                DirectionValid = StartAngle < 140;
+            }
+            
+            void SetupStarts()
+            {
+                RayOrigin = RootPoint;
+                RayDir = (Vector2)Cam.ScreenToWorldPoint(MousePos) - RootPoint;
+                
+                RayDir = RayDir.normalized;
+                BubbleWaypoints[0] = RayOrigin;
+                TrajectoryPoints[0] = RayOrigin;
+            }
         }
-    
+        
         public void ShootBubble()
         {
             if (ActualBubble == null) return;
+            if (IsClickedToCanvases()) return;
             ProcessRay();
+            if (!DirectionValid) return;
             Vector3[] Waypoints = new Vector3[BubbleSuccessCollisions+1];
             for (int i=0; i< Waypoints.Length; i++)
             {
@@ -131,6 +163,27 @@ namespace Gameplay{
             ActualBubble.ActivateCollisions();
             AnimateBubble(ActualBubble, Waypoints);
             ActualBubble = null;
+        }
+        
+        bool IsClickedToCanvases()
+        {
+            foreach(var Canvas in UserCanvases)
+            {
+                if (!Canvas.gameObject.activeInHierarchy) continue;
+                if (!isClickedToCanvas(Canvas)) continue;
+                return true;
+            }
+            return false;
+        }
+        
+        bool isClickedToCanvas(UnityEngine.UI.GraphicRaycaster Target)
+        {
+            m_PointerEventData = new PointerEventData(Events);
+            m_PointerEventData.position = MousePos;
+            if (CanvasResults == null) CanvasResults = new List<RaycastResult>();
+            CanvasResults.Clear();
+            Target.Raycast(m_PointerEventData, CanvasResults);
+            return CanvasResults.Count > 0;
         }
         
         async void AnimateBubble(Bubble TargetBubble, Vector3[] Waypoints)
@@ -157,11 +210,13 @@ namespace Gameplay{
                 await System.Threading.Tasks.Task.Delay(16);
             }
             TargetBubble.ActivateCollisions();
-            GameField.CollectBubble(TargetBubble);
+            GameField.PlaceUserBubble(TargetBubble);
+            if (!GameplayActive) return;
             RefreshActualBubble();
+            ProcessRay();
         }
         
-        public void SwitchBubble()
+        public void SwitchBubbleToSecondary()
         {
             ActualBubble = Queue.SwitchBubbles(ActualBubble);
             ActualBubble.MyTransform.position = RootPoint;

@@ -1,22 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using IconStatus = Data.UserData.LevelStatus;
 
 namespace UI.Map
 {
     [System.Serializable]
     public class MapIcon
     {
-        [System.Serializable]
-        public enum IconStatus
-        {
-            Locked = -1,
-            Available = 0,
-            Complete1Star = 1,
-            Complete2Star = 2,
-            Complete3Star = 3
-        }
+        
         public RectTransform IconTransform {get; private set;}
         GameObject OnScene;
         GameObject AvailableParent, CompletedParent, LockedParent;
@@ -59,6 +50,13 @@ namespace UI.Map
             Result += IconTransform.TransformVector(Vector3.down * IconTransform.rect.height * 0.3f);
             Result -= Vector3.forward * Result.z;
             return Result;
+        }
+        
+        public void ProcessOnClicked(System.Action OnClick)
+        {
+            var Button = OnScene.GetComponent<Button>();
+            Button.onClick.RemoveAllListeners();
+            Button.onClick.AddListener(OnClick.Invoke);
         }
     }
 }

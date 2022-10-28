@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 
 namespace Gameplay{
     [System.Serializable]
@@ -37,7 +34,7 @@ namespace Gameplay{
         {
             if (Bubbles[Place] != null)
             {
-                Debug.Log("Место для пузырька занято");
+                Debug.Log("Bubble place is bussy");
                 return;
             }
             Bubbles[Place] = NewBubble;

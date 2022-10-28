@@ -1,10 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace Gameplay{
-    [System.Serializable]
     public class Bubble
     {
         public static Color GetColorByEnum(BubbleColor RequiredColor)
@@ -18,18 +14,18 @@ namespace Gameplay{
         
         public static BubbleColor GetRandomColor()
         {
-            return (BubbleColor) Random.Range(0,System.Enum.GetValues(typeof(BubbleColor)).Length);
+            return (BubbleColor) Random.Range(1, 5);
         }
         
         public enum BubbleColor
         {
-            Red, Green, Yellow, Purple
+            None, Red, Green, Yellow, Purple
         }
         
         public Transform MyTransform {get; private set;}
         public BubbleColor MyColor {get; private set;}
         GameObject OnScene;
-        Collider2D Col;
+        Collider2D Collisions;
         float Size;
         
         public Bubble(GameObject Sample, Transform Parent, float BubbleSize, BubbleColor Color)
@@ -38,7 +34,7 @@ namespace Gameplay{
             OnScene.SetActive(true);
             MyTransform = OnScene.transform;
             MyTransform.SetParent(Parent);
-            Col = OnScene.GetComponent<Collider2D>();
+            Collisions = OnScene.GetComponent<Collider2D>();
             Size = BubbleSize;
             MyTransform.localScale = Vector3.one * BubbleSize;
             ChangeColor(Color);
@@ -58,8 +54,8 @@ namespace Gameplay{
             MyTransform.localPosition = Vector3.right * (-GameField.BubblesCountPerLine/2f + IdOnLine+0.25f) * Size;
         }
         
-        public void DeactivateCollisions() => Col.enabled = false;
+        public void DeactivateCollisions() => Collisions.enabled = false;
         
-        public void ActivateCollisions() => Col.enabled = true;
+        public void ActivateCollisions() => Collisions.enabled = true;
     }
 }

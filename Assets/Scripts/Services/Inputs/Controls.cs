@@ -53,6 +53,15 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Back"",
+                    ""type"": ""Button"",
+                    ""id"": ""eac52e45-3ce6-4c1f-8eee-2f19b40bb81f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -88,6 +97,17 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                     ""action"": ""SwitchBubbles"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1c890641-b839-4b22-b0f9-4ca7a976936b"",
+                    ""path"": ""*/{Back}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Base"",
+                    ""action"": ""Back"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -111,6 +131,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         m_BaseMap_ClickPosition = m_BaseMap.FindAction("ClickPosition", throwIfNotFound: true);
         m_BaseMap_Clicked = m_BaseMap.FindAction("Clicked", throwIfNotFound: true);
         m_BaseMap_SwitchBubbles = m_BaseMap.FindAction("SwitchBubbles", throwIfNotFound: true);
+        m_BaseMap_Back = m_BaseMap.FindAction("Back", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -173,6 +194,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
     private readonly InputAction m_BaseMap_ClickPosition;
     private readonly InputAction m_BaseMap_Clicked;
     private readonly InputAction m_BaseMap_SwitchBubbles;
+    private readonly InputAction m_BaseMap_Back;
     public struct BaseMapActions
     {
         private @Controls m_Wrapper;
@@ -180,6 +202,7 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         public InputAction @ClickPosition => m_Wrapper.m_BaseMap_ClickPosition;
         public InputAction @Clicked => m_Wrapper.m_BaseMap_Clicked;
         public InputAction @SwitchBubbles => m_Wrapper.m_BaseMap_SwitchBubbles;
+        public InputAction @Back => m_Wrapper.m_BaseMap_Back;
         public InputActionMap Get() { return m_Wrapper.m_BaseMap; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -198,6 +221,9 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @SwitchBubbles.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnSwitchBubbles;
                 @SwitchBubbles.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnSwitchBubbles;
                 @SwitchBubbles.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnSwitchBubbles;
+                @Back.started -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
+                @Back.performed -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
+                @Back.canceled -= m_Wrapper.m_BaseMapActionsCallbackInterface.OnBack;
             }
             m_Wrapper.m_BaseMapActionsCallbackInterface = instance;
             if (instance != null)
@@ -211,6 +237,9 @@ public partial class @Controls : IInputActionCollection2, IDisposable
                 @SwitchBubbles.started += instance.OnSwitchBubbles;
                 @SwitchBubbles.performed += instance.OnSwitchBubbles;
                 @SwitchBubbles.canceled += instance.OnSwitchBubbles;
+                @Back.started += instance.OnBack;
+                @Back.performed += instance.OnBack;
+                @Back.canceled += instance.OnBack;
             }
         }
     }
@@ -229,5 +258,6 @@ public partial class @Controls : IInputActionCollection2, IDisposable
         void OnClickPosition(InputAction.CallbackContext context);
         void OnClicked(InputAction.CallbackContext context);
         void OnSwitchBubbles(InputAction.CallbackContext context);
+        void OnBack(InputAction.CallbackContext context);
     }
 }

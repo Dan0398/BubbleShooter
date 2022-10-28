@@ -31,15 +31,18 @@ namespace UI.Menu
         
         public void HideAnimated(CancellationToken? token = null) => Animate(false, token);
         
+        public void Hide() => OnScene.gameObject.SetActive(false);
+        
         async void Animate(bool isInvoking, CancellationToken? token)
         {
             const int AnimationSteps = 40;
+            if (isInvoking == OnScene.gameObject.activeInHierarchy) return;
             float Lerp = 0;
             if (isInvoking) OnScene.gameObject.SetActive(true);
             for (int i = 0; i <= AnimationSteps; i++)
             {
                 if (!Application.isPlaying) return;
-                if (token.Value.IsCancellationRequested) break;
+                if (token != null && token.Value.IsCancellationRequested) break;
                 Lerp = i / (float)AnimationSteps;
                 if (isInvoking) Lerp = 1 - Lerp;
                 RefreshView(Lerp);
@@ -51,7 +54,7 @@ namespace UI.Menu
             
             void RefreshView(float Lerp)
             {
-                OnScene.localScale = Vector3.one * (1 + Lerp * 0.4f);
+                OnScene.localScale = Vector3.one * (1 + Lerp * 0.4f * (isInvoking? 1 : -1));
                 foreach(var Maskable in BaseColors)
                 {
                     Maskable.Key.color = Maskable.Value - Color.black * Maskable.Value.a * Lerp;

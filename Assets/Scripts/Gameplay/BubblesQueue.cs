@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Gameplay{
@@ -11,19 +9,14 @@ namespace Gameplay{
         Bubble[] CreatedBubbles;
         Pool BubblesPool;
         float BubbleSize;
+        Bubble.BubbleColor[] LevelColors;
+        int NumberInCycle;
         
         public void Init(Transform Parent, Pool Pool, float BubbleSize)
         {
-            CreateRootObject(Parent);
             BubblesPool = Pool;
             this.BubbleSize = BubbleSize;
-            CreatedBubbles = new Bubble[5];
-            for (int i=0; i< CreatedBubbles.Length; i++)
-            {
-                CreatedBubbles[i] = BubblesPool.GiveMeBubble();
-                CreatedBubbles[i].RandomizeColor();
-            }
-            RefreshTransforms();
+            CreateRootObject(Parent);
         }
         
         void CreateRootObject(Transform Parent)
@@ -33,6 +26,19 @@ namespace Gameplay{
             OnScene = Obj.transform;
             OnScene.position = PosOnScreen;
             OnScene.SetParent(Parent);
+        }
+        
+        void RefreshBubbles()
+        {
+            if (CreatedBubbles == null)
+            {
+                CreatedBubbles = new Bubble[5];
+            }
+            for (int i=0; i< CreatedBubbles.Length; i++)
+            {
+                SetupBubbleFromPool(i);
+            }
+            RefreshTransforms();
         }
         
         void RefreshTransforms()
@@ -59,10 +65,50 @@ namespace Gameplay{
             {
                 CreatedBubbles[i] = CreatedBubbles[i+1]; 
             }
-            CreatedBubbles[CreatedBubbles.Length-1] = BubblesPool.GiveMeBubble();
-            CreatedBubbles[CreatedBubbles.Length-1].RandomizeColor();
+            SetupBubbleFromPool(CreatedBubbles.Length-1);
             RefreshTransforms();
             return Result;
+        }
+        
+        void SetupBubbleFromPool(int NumberInQueue)
+        {
+            CreatedBubbles[NumberInQueue] = BubblesPool.GiveMeBubble();
+            if (NumberInCycle == -1)
+            {
+                CreatedBubbles[NumberInQueue].RandomizeColor();
+            }
+            else 
+            {
+                CreatedBubbles[NumberInQueue].ChangeColor(LevelColors[NumberInCycle]);
+                NumberInCycle++;
+                if (NumberInCycle>= LevelColors.Length) NumberInCycle = 0;
+            }
+        }
+        
+        public void SetRandomize()
+        {
+            NumberInCycle = -1;
+            OnScene.gameObject.SetActive(true);
+            RefreshBubbles();
+        }
+        
+        public void SetLevelColorCycle(Content.Level LevelData)
+        {
+            NumberInCycle = 0;
+            LevelColors = LevelData.PlayerPool;
+            OnScene.gameObject.SetActive(true);
+            RefreshBubbles();
+        }
+        
+        public void Deactivate()
+        {
+            for (int i=0; i< CreatedBubbles.Length; i++)
+            {
+                if (CreatedBubbles[i] == null) continue;
+                BubblesPool.HideBubbleToPool(CreatedBubbles[i]);
+                CreatedBubbles[i] = null;
+            }
+            OnScene.gameObject.SetActive(false);
         }
     }
 }

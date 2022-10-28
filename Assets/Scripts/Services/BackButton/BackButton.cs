@@ -7,6 +7,9 @@ namespace Services{
         
         public BackButton()
         {
+            var Inputs = new Controls();
+            Inputs.Enable();
+            Inputs.BaseMap.Back.performed += (s) => GoBack();
             BackActions = new Stack<System.Action>();
         }
         
@@ -19,12 +22,17 @@ namespace Services{
         {
             if (BackActions.Count > 0)
             {
-                BackActions.Peek()?.Invoke();
+                BackActions.Pop()?.Invoke();
             }
             else 
             {
-                UnityEngine.Debug.Log("Вызов меню подтверждения выхода");
+                Services.DI.Single<UI.Settings.Settings>().ShowSettings();
             }
+        }
+        
+        public void Cleanup()
+        {
+            BackActions.Clear();
         }
     }
 }
